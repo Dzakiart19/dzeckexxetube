@@ -167,6 +167,8 @@ function cleanCatalogTitle(raw: string): string {
     .replace(/\s+at\s+[a-z0-9.-]+\s*(com|net|org|xyz|to|io|cc|tv)\s*$/gi, " ")
     .replace(/join\s+tele(gram)?\s*@?\S+/gi, " ")
     .replace(/telegram\s*@[\w-]+/gi, " ")
+    // Strip bare off-platform invites ("Tele @channel", "TG @user").
+    .replace(/\b(?:tele|tg|telegram)\s*@\w+/gi, " ")
     // Strip file extensions and trailing/leading junk separators.
     .replace(/\.(mp4|mkv|mov|avi|wmv|webm)\s*$/gi, " ")
     .replace(/\s*[-–|]\s*$/, "")
@@ -291,7 +293,11 @@ async function upsertFolderWithVideos(
 ): Promise<number | null> {
   const name = (input.rawName && input.rawName.trim().length > 0
     ? input.rawName.trim().slice(0, 120)
-    : `Folder ${input.upstreamId}`);
+    : `Folder ${input.upstreamId}`)
+    // Upstream embeds the item count in the link text ("19 Januari (7)");
+    // the catalog exposes its own verified videoCount instead.
+    .replace(/\s*\(\d+\)\s*$/, "")
+    .trim() || `Folder ${input.upstreamId}`;
   const verdict = moderateText(name);
   // Every folder gets a category: keyword match or the neutral fallback.
   const categorySlug = categorizeFolder(name) ?? "umum";
@@ -412,7 +418,7 @@ async function upsertFolderWithVideos(
  * approved for display.
  */
 export async function syncCatalog(options: SyncOptions = {}): Promise<SyncStats> {
-  const maxFolders = Math.max(1, Math.min(options.maxFolders ?? 12, 40));
+  const maxFolders = Math.max(1, Math.min(options.maxFolders ?? 24, 100));
   const videosPerFolder = Math.max(1, Math.min(options.videosPerFolder ?? 24, 60));
 
   const stats: SyncStats = {

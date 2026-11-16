@@ -45,9 +45,16 @@ const BLOCK_RULES: BlockRule[] = [
   { code: "MINOR_INDICATOR", pattern: /\bteen(?:s|age|ager|agers)?\b/i },
   {
     code: "MINOR_INDICATOR",
-    // Indonesian school/young-girl slang included deliberately (sma/smp = high
-    // school, abg = "anak baru gede", pelajar = pupil).
-    pattern: /\b(high\s?school|schoolgirl|schoolboy|student|cheerleader|babysitter|sma|smp|pelajar|abg)\b/i,
+    // Indonesian school/young-girl slang included deliberately (sma/smp/smk =
+    // school tiers, abg = "anak baru gede", pelajar/murid/siswa = pupil).
+    pattern: /\b(high\s?school|schoolgirl|schoolboy|student|cheerleader|babysitter|sma|smp|smk|pelajar|murid|siswa|siswi|abg)\b/i,
+  },
+  {
+    code: "MINOR_INDICATOR",
+    // "sekolah" (school), phonetic spellings of school tiers ("esempe" =
+    // S-M-P, "es em pe"), elementary school tags and the ubiquitous
+    // Indonesian child slang (bocil/bocah/kecil) are absolute bans.
+    pattern: /\b(sekolah|anak\s+(?:sd|tk)|sekolah\s+(?:dasar|menengah)|bocil|bocah|kechil+|kecil)\b|es\s?em\s?pes?\b|esempe+h?/i,
   },
   { code: "MINOR_INDICATOR", pattern: /\b(barely\s?legal|not\s?yet\s?legal)\b/i },
   { code: "MINOR_INDICATOR", pattern: /\b(daughter|son|niece|nephew|granddaughter|grandson|little\s?(girl|boy))\b/i },
@@ -65,8 +72,8 @@ const BLOCK_RULES: BlockRule[] = [
   },
   {
     code: "NON_CONSENSUAL",
-    // "tidur" = sleeping (Indonesian) — incapacitation framing.
-    pattern: /\b(asleep|sleeping|sleepy|tidur|ketiduran)\b/i,
+    // "tidur" = sleeping, "mabuk" = drunk — incapacitation framing.
+    pattern: /\b(asleep|sleeping|sleepy|tidur|ketiduran|mabuk|pusing)\b/i,
   },
   {
     code: "NON_CONSENSUAL",
@@ -148,6 +155,12 @@ export function moderateText(raw: string): ModerationVerdict {
   if (distinctChildTerms >= 1 && sexualHit) {
     return { approved: false, reason: "INCEST_THEME", matched: `${childHits[0]}+${sexualHit[0]}` };
   }
+  // Sibling roleplay: a sibling term combined with ANY sexual-context signal
+  // (broader than the hard sexual list) is rejected conservatively.
+  const siblingHit = text.match(SIBLING_TERM_PATTERN);
+  if (siblingHit && text.match(SIBLING_CONTEXT_PATTERN)) {
+    return { approved: false, reason: "INCEST_THEME", matched: siblingHit[0] };
+  }
   // Parent framing combined with explicit sexual terms is treated as
   // family-roleplay/incest-adjacent and rejected conservatively.
   if (parentHit && sexualHit) {
@@ -171,9 +184,17 @@ function normalizeLeet(text: string): string {
     .replace(/[4@]/g, "a")
     .replace(/[5$]/g, "s")
     .replace(/[7]/g, "t")
+    .replace(/[9]/g, "g")
     .replace(/[*_+~.\-]/g, "")
     .replace(/\s+/g, " ");
 }
+
+/** Sibling terms — paired with any sexual-context signal, rejected. */
+const SIBLING_TERM_PATTERN = /\b(kakak|kaka|adik|adek)(?:nya|ku|mu|kah)?\b/i;
+
+/** Broad sexual-context signals used for the sibling co-occurrence rule. */
+const SIBLING_CONTEXT_PATTERN =
+  /\b(ngajar|ajarin|ngajarin|diajarin|kaget|pacar|ngecrit|crot|digenjot|dientot|ngewe|ewe|entot|bokep|bugil|sepong|nyepong|toket|memek|pepek|sange|masturbasi|onani|colmek|telanjang|toples|ngocok|perawan)\b/i;
 
 /**
  * Family-role terms (parents). Presence alone is fine (MILF-style genre
@@ -187,7 +208,7 @@ const PARENT_TERM_PATTERN =
 
 /** Child/family-member terms — sex + these is incest-framed. */
 const CHILD_TERM_PATTERN =
-  /\b(anak|putra|putri|kakak|kaka|adek|adik|ponakan|keponakan|sepupu|menantu|mertua|ipar|son|daughter|sister|brother|cousin|nephew|niece|in-law)(?:nya|ku|mu|kah)?\b/i;
+  /\b(anak|putra|putri|bocil|bocah|kakak|kaka|adek|adik|ponakan|keponakan|sepupu|menantu|mertua|ipar|son|daughter|sister|brother|cousin|nephew|niece|in-law)(?:nya|ku|mu|kah)?\b/i;
 
 /** Hard Indonesian/English sexual terms (used only in combination rules). */
 const SEXUAL_TERM_PATTERN =

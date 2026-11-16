@@ -34,7 +34,7 @@ export const videoDetailSchema = z.object({
   title: z.string(),
   thumbnailUrl: z.string().nullable(),
   playbackUrl: z.string().nullable(),
-  playbackSource: z.enum(["direct-cdn", "fallback-stream", "none"]),
+  playbackSource: z.enum(["direct-cdn", "fallback-stream", "hls-stream", "none"]),
   duration: z.number().nullable(),
   expiresAt: z.string().nullable(),
   upstreamMetadata: z.object({
@@ -49,7 +49,7 @@ export const playbackResultSchema = z.object({
   videoId: z.string(),
   status: z.enum(["ready", "fallback", "expired", "forbidden", "not-found", "upstream-error"]),
   playbackUrl: z.string().nullable(),
-  playbackSource: z.enum(["direct-cdn", "fallback-stream", "none"]),
+  playbackSource: z.enum(["direct-cdn", "fallback-stream", "hls-stream", "none"]),
   posterUrl: z.string().nullable(),
   expiresAt: z.string().nullable(),
   fetchedAt: z.string(),

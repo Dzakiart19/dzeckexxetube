@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, RotateCcw } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics-client";
 
@@ -11,6 +11,8 @@ interface VideoPlayerProps {
   videoSlug: string;
   /** Internal relay URL (validated server-side). */
   src: string;
+  /** True when the relay serves an HLS playlist (hls.js playback). */
+  isHls?: boolean;
   poster: string | null;
   title: string;
   /** Bump server caches when the user retries after a media error. */
@@ -18,12 +20,12 @@ interface VideoPlayerProps {
 }
 
 /**
- * Accessible HTML5 player: native controls (keyboard operable), poster,
- * playsInline, metadata-only preload, no autoplay with sound. Media errors
- * surface an in-player panel with a retry action; play/error events are
- * tracked anonymously (aggregate counters only).
+ * Accessible player: native HTML5 controls for progressive MP4, hls.js for
+ * HLS playlists. Poster, playsInline, metadata-only preload, no autoplay
+ * with sound. Media errors surface an in-player panel with a retry action;
+ * play/error events are tracked anonymously (aggregate counters only).
  */
-export function VideoPlayer({ videoId, videoSlug, src, poster, title, onRetry }: VideoPlayerProps) {
+export function VideoPlayer({ videoId, videoSlug, src, isHls = false, poster, title, onRetry }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playTracked = useRef(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -33,6 +35,50 @@ export function VideoPlayer({ videoId, videoSlug, src, poster, title, onRetry }:
   // Cache-bust the relay URL on retries so the browser re-fetches after the
   // server re-resolves a fresh upstream URL.
   const currentSrc = attempt === 0 ? src : `${src}${src.includes("?") ? "&" : "?"}v=${attempt}`;
+
+  // HLS playback via hls.js. The relay URL always points at our own API, so
+  // no upstream identity is ever exposed to the client.
+  useEffect(() => {
+    if (!isHls) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+    let hlsPlayer: any = null;
+
+    const setup = async () => {
+      try {
+        const hlsModule = await import("hls.js");
+        const Hls = hlsModule.default;
+        if (cancelled) return;
+        if (Hls.isSupported()) {
+          hlsPlayer = new Hls({
+            // No autoplay-with-sound support needed; keep buffering modest.
+            maxBufferLength: 30,
+            enableWorker: true,
+          });
+          hlsPlayer.loadSource(currentSrc);
+          hlsPlayer.attachMedia(video);
+          hlsPlayer.on(Hls.Events.ERROR, (_event: unknown, data: { fatal?: boolean }) => {
+            if (data?.fatal) {
+              trackEvent({ type: "VIDEO_ERROR", videoSlug });
+              setMediaError("Sumber tidak dapat diputar saat ini. Video mungkin telah dihapus atau dipindahkan dari sumber.");
+            }
+          });
+        } else if (!video.canPlayType("application/vnd.apple.mpegurl")) {
+          setMediaError("Format video tidak didukung oleh browser ini.");
+        }
+      } catch {
+        setMediaError("Pemutar video tidak dapat dimuat.");
+      }
+    };
+
+    void setup();
+    return () => {
+      cancelled = true;
+      if (hlsPlayer) hlsPlayer.destroy();
+    };
+  }, [currentSrc, isHls, videoSlug]);
 
   const handleError = () => {
     const code = videoRef.current?.error?.code;
@@ -65,12 +111,12 @@ export function VideoPlayer({ videoId, videoSlug, src, poster, title, onRetry }:
       <video
         key={`${videoId}-${attempt}`}
         ref={videoRef}
-        src={currentSrc}
+        src={isHls ? undefined : currentSrc}
         poster={poster ?? undefined}
         controls
         playsInline
         preload="metadata"
-        onError={handleError}
+        onError={isHls ? undefined : handleError}
         onPlaying={handlePlay}
         className="aspect-video w-full bg-black"
         aria-label={`Pemutar video: ${title}`}

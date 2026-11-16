@@ -28,7 +28,7 @@ export interface FolderResponse {
   fetchedAt: string;
 }
 
-export type PlaybackSourceKind = "direct-cdn" | "fallback-stream" | "none";
+export type PlaybackSourceKind = "direct-cdn" | "fallback-stream" | "hls-stream" | "none";
 
 export interface VideoDetail {
   id: string;

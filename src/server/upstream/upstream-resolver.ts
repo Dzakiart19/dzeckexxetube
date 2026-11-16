@@ -114,7 +114,7 @@ async function resolveInternal(
 
         if (validated?.url) {
           status = "fallback";
-          playbackSource = "fallback-stream";
+          playbackSource = validated.url.split("?")[0].endsWith(".m3u8") ? "hls-stream" : "fallback-stream";
           rawUrl = validated.url;
         } else if (fallback.status === 403) {
           status = "forbidden";

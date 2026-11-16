@@ -80,6 +80,7 @@ export function WatchClient({ upstreamId, posterUrl, title, videoSlug }: WatchCl
           videoId={upstreamId}
           videoSlug={videoSlug}
           src={playback.playbackUrl}
+          isHls={playback.playbackSource === "hls-stream"}
           poster={thumbPath(posterUrl)}
           title={title}
           onRetry={retry}
