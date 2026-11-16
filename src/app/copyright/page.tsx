@@ -1,97 +1,63 @@
 import type { Metadata } from "next";
-import { LegalPageShell } from "@/components/layout/LegalPageShell";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
+import { Breadcrumbs } from "@/components/navigation/Breadcrumbs";
+import { TakedownForm } from "@/components/forms/TakedownForm";
+import { PUBLIC_SITE_NAME } from "@/lib/public-config";
 
 export const metadata: Metadata = {
-  title: "Hak Cipta & DMCA",
+  title: "Copyright & Takedown (DMCA)",
   description:
-    "Pernyataan hak cipta videytube dan prosedur laporan penghapusan bergaya DMCA: unsur laporan, cara pengiriman, waktu respons, dan tindak lanjut.",
-  alternates: { canonical: "/copyright" },
+    "Kebijakan hak cipta Videytube dan formulir permintaan penghapusan (takedown) bergaya DMCA untuk pemilik hak atau agen resmi.",
+  robots: { index: false, follow: true },
 };
 
-export default function CopyrightPage() {
+interface CopyrightPageProps {
+  searchParams: Promise<{ url?: string }>;
+}
+
+function extractWatchSlug(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const match = raw.match(/^\/watch\/([a-z0-9-]{1,80})\/?$/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+export default async function CopyrightPage({ searchParams }: CopyrightPageProps) {
+  const { url } = await searchParams;
+  const initialUrl = (url ?? "").slice(0, 300);
+  const videoSlug = extractWatchSlug(initialUrl);
+
   return (
-    <LegalPageShell title="Hak Cipta & DMCA" updated="1 Januari 2026">
-      <h2>1. Pernyataan Hak Cipta</h2>
-      <p>
-        <strong>
-          videytube tidak menghosting dan tidak mengklaim kepemilikan atas konten apa
-          pun.
-        </strong>{" "}
-        Seluruh konten yang dapat dilihat melalui videytube disajikan dari penyedia
-        sumber konten pihak ketiga. videytube hanyalah antarmuka penjelajahan dan
-        pemutaran: kami tidak menyimpan salinan konten, tidak mengunduh, dan tidak
-        menyediakan fitur unduh.
-      </p>
+    <div className="mx-auto w-full max-w-2xl">
+      <PageViewTracker pathKind="copyright" />
+      <Breadcrumbs items={[{ label: "Copyright & Takedown" }]} />
 
-      <h2>2. Dasar Pengajuan Laporan</h2>
-      <p>
-        Jika Anda adalah pemilik hak cipta atau agen yang diberi wewenang untuk
-        bertindak atas nama pemilik hak, dan Anda meyakini ada halaman di situs ini
-        yang menyajikan tautan ke konten yang melanggar hak Anda, Anda dapat
-        mengajukan laporan penghapusan (takedown) dengan mengikuti pola laporan
-        DMCA di bawah ini.
-      </p>
+      <header className="mb-8">
+        <p className="overline-label">Kepatuhan hak cipta</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Copyright &amp; Takedown (DMCA)</h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          {PUBLIC_SITE_NAME} tidak menghosting dan tidak mengklaim kepemilikan atas konten apa pun. Seluruh video
+          disajikan dari penyedia pihak ketiga terverifikasi. Jika Anda pemilik hak atau agen resmi dan menemukan
+          entri katalog yang melanggar, ajukan permintaan penghapusan melalui formulir di bawah.
+        </p>
+      </header>
 
-      <h2>3. Unsur Laporan</h2>
-      <p>Agar dapat diproses, laporan Anda wajib memuat:</p>
-      <ul>
-        <li>
-          <strong>Identitas dan kontak pelapor:</strong> nama lengkap, alamat,
-          nomor telepon, dan alamat email yang dapat dihubungi.
-        </li>
-        <li>
-          <strong>Identifikasi karya berhak cipta</strong> yang diklaim dilanggar,
-          disertai deskripsi yang cukup rinci.
-        </li>
-        <li>
-          <strong>URL halaman pada situs ini</strong> yang dilaporkan, misalnya{" "}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs text-foreground">
-            {"/watch/{id}"}
-          </code>
-          , agar laporan dapat diidentifikasi dengan tepat.
-        </li>
-        <li>
-          <strong>Pernyataan itikad baik</strong> bahwa penggunaan yang dikeluhkan
-          tidak diizinkan oleh pemilik hak, agennya, atau hukum.
-        </li>
-        <li>
-          <strong>Pernyataan keakuratan</strong> bahwa informasi dalam laporan
-          akurat dan bahwa pelapor berwenang mengajukan laporan atas nama pemilik
-          hak.
-        </li>
-        <li>
-          <strong>Tanda tangan elektronik</strong> dari pemilik hak atau agen yang
-          berwenang.
-        </li>
-      </ul>
+      <section className="mb-8 rounded-xl border border-border/70 bg-card/40 p-5" aria-labelledby="dmca-process-heading">
+        <h2 id="dmca-process-heading" className="text-sm font-semibold text-foreground">
+          Proses penanganan
+        </h2>
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-muted-foreground">
+          <li>Permintaan yang sah dihapus dari katalog secara langsung dan dicatat dalam log moderasi.</li>
+          <li>Kode referensi diberikan untuk tindak lanjut status permintaan.</li>
+          <li>Penyedia sumber diberitahu agar sumber aslinya juga ditinjau ulang.</li>
+          <li>Pihak yang dihapus dapat mengajukan counter-notice melalui halaman kontak.</li>
+        </ol>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground/80">
+          Penyalahgunaan proses takedown (klaim palsu) dapat menempatkan penyalahguna di bawah tanggung jawab
+          hukum sesuai prinsip pernyataan di bawah.
+        </p>
+      </section>
 
-      <h2>4. Cara Mengirim Laporan</h2>
-      <p>
-        Susun laporan sesuai daftar pada bagian di atas dan kirimkan melalui email
-        ke <a href="mailto:legal@videytube.example">legal@videytube.example</a> dengan
-        subjek{" "}
-        <strong>&quot;Laporan Hak Cipta&quot;</strong>. Laporan yang tidak memuat
-        unsur-unsur di atas mungkin tidak dapat kami proses.
-      </p>
-      <p className="rounded-md border border-border bg-muted/40 p-3 text-xs">
-        Catatan untuk pemilik situs: alamat email di atas adalah placeholder. Ganti
-        dengan alamat email resmi Anda dan sesuaikan prosedur laporan ini dengan
-        yurisdiksi serta kerangka hukum yang berlaku di wilayah Anda sebelum
-        menerbitkan halaman.
-      </p>
-
-      <h2>5. Waktu Respons dan Tindak Lanjut</h2>
-      <p>
-        Kami menargetkan respons awal atas laporan yang memenuhi syarat dalam
-        waktu 2-5 hari kerja. Selama proses verifikasi berlangsung, kami dapat
-        membatasi tautan yang dilaporkan agar tidak dapat diakses melalui videytube.
-      </p>
-      <p>
-        Apabila laporan terbukti valid, tautan terkait akan dihapus dari situs ini.
-        Laporan yang tidak lengkap akan kami mintakan kelengkapan, dan
-        penyalahgunaan prosedur ini, misalnya klaim yang diketahui palsu, dapat
-        membuat pelapor bertanggung jawab atas kerugian yang timbul.
-      </p>
-    </LegalPageShell>
+      <TakedownForm initialUrl={initialUrl} videoSlug={videoSlug} />
+    </div>
   );
 }

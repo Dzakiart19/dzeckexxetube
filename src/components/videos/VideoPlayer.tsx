@@ -1,11 +1,14 @@
 "use client";
 
-import { AlertTriangle, Play, RotateCcw } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics-client";
 
 interface VideoPlayerProps {
   videoId: string;
+  /** Anonymous catalog slug used for aggregate play/error counters. */
+  videoSlug: string;
   /** Internal relay URL (validated server-side). */
   src: string;
   poster: string | null;
@@ -16,11 +19,13 @@ interface VideoPlayerProps {
 
 /**
  * Accessible HTML5 player: native controls (keyboard operable), poster,
- * playsInline, metadata-only preload, no autoplay. Media errors surface an
- * in-player panel with a retry action instead of a broken element.
+ * playsInline, metadata-only preload, no autoplay with sound. Media errors
+ * surface an in-player panel with a retry action; play/error events are
+ * tracked anonymously (aggregate counters only).
  */
-export function VideoPlayer({ videoId, src, poster, title, onRetry }: VideoPlayerProps) {
+export function VideoPlayer({ videoId, videoSlug, src, poster, title, onRetry }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playTracked = useRef(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [started, setStarted] = useState(false);
@@ -31,17 +36,26 @@ export function VideoPlayer({ videoId, src, poster, title, onRetry }: VideoPlaye
 
   const handleError = () => {
     const code = videoRef.current?.error?.code;
-    // MediaErrorCode.MEDIA_ERR_SRC_NOT_SUPPORTED (4): the source cannot be played.
+    trackEvent({ type: "VIDEO_ERROR", videoSlug });
     setMediaError(
       code === 4
         ? "Format video tidak didukung oleh browser ini."
-        : "Terjadi gangguan saat memuat video. Silakan coba lagi.",
+        : "Sumber tidak dapat diputar saat ini. Video mungkin telah dihapus atau dipindahkan dari sumber.",
     );
+  };
+
+  const handlePlay = () => {
+    setStarted(true);
+    if (!playTracked.current) {
+      playTracked.current = true;
+      trackEvent({ type: "VIDEO_PLAY", videoSlug });
+    }
   };
 
   const handleRetry = () => {
     setMediaError(null);
     setStarted(false);
+    playTracked.current = false;
     setAttempt((value) => value + 1);
     onRetry();
   };
@@ -57,7 +71,7 @@ export function VideoPlayer({ videoId, src, poster, title, onRetry }: VideoPlaye
         playsInline
         preload="metadata"
         onError={handleError}
-        onPlaying={() => setStarted(true)}
+        onPlaying={handlePlay}
         className="aspect-video w-full bg-black"
         aria-label={`Pemutar video: ${title}`}
       />
@@ -69,8 +83,10 @@ export function VideoPlayer({ videoId, src, poster, title, onRetry }: VideoPlaye
           className="absolute inset-0 flex items-center justify-center bg-black/35 transition-colors hover:bg-black/25"
           aria-label={`Putar ${title}`}
         >
-          <span className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform duration-200 hover:scale-105">
-            <Play className="size-7 translate-x-0.5 fill-current" aria-hidden />
+          <span className="flex size-16 items-center justify-center rounded-full border border-primary/50 bg-black/55 text-primary transition-transform duration-200 hover:scale-105">
+            <svg viewBox="0 0 24 24" className="size-7 translate-x-0.5 fill-current" aria-hidden>
+              <path d="M8 5.5v13l11-6.5-11-6.5z" />
+            </svg>
           </span>
         </button>
       )}

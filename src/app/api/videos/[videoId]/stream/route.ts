@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import type { ResolverStatus } from "@/lib/types";
 import { checkRateLimit } from "@/server/security/rate-limit";
 import { resolveInternalPlayback } from "@/server/upstream/upstream-resolver";
+import { isApprovedUpstreamVideo } from "@/server/catalog/queries";
 import { safeIdSchema } from "@/server/validation/schemas";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,8 @@ const CONTENT_TYPE_FALLBACK = "video/mp4";
  *  - only hosts from the allowlist can be reached (enforced by the resolver),
  *  - upstream requires a same-site Referer; the relay adds the configured
  *    Referer and User-Agent headers,
- *  - Range requests are forwarded so seeking works in the HTML5 player.
+ *  - Range requests are forwarded so seeking works in the HTML5 player,
+ *  - moderation gate: only approved catalog entries can be relayed.
  */
 function playbackFailure(status: ResolverStatus): Response {
   switch (status) {
@@ -80,6 +82,10 @@ export async function GET(request: Request, context: { params: Promise<{ videoId
     const { videoId } = await context.params;
     const id = safeIdSchema.safeParse(videoId);
     if (!id.success) return fail(400, "INVALID_INPUT", "ID video tidak valid.");
+
+    // Moderation gate: never relay content that is not an approved catalog entry.
+    const approved = await isApprovedUpstreamVideo(videoId);
+    if (!approved) return fail(404, "NOT_FOUND", "Video tidak ditemukan di katalog termoderasi.");
 
     let internal = await resolveInternalPlayback(videoId);
     if (!internal.rawUrl) return playbackFailure(internal.status);

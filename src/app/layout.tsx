@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AppShell } from "@/components/layout/AppShell";
 import { Toaster } from "@/components/ui/SonnerToaster";
+import { PUBLIC_MIN_AGE, PUBLIC_SITE_NAME } from "@/lib/public-config";
 import { siteUrl } from "@/lib/urls";
 
 const geistSans = Geist({
@@ -19,34 +20,35 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "videytube - Streaming video minimalis",
-    template: "%s · videytube",
+    default: `${PUBLIC_SITE_NAME} — Temukan video 18+ dari sumber terverifikasi`,
+    template: `%s · ${PUBLIC_SITE_NAME}`,
   },
   description:
-    "Antarmuka streaming video minimalis untuk menjelajahi koleksi folder dan memutar video langsung di browser. videytube tidak mengklaim kepemilikan atas konten pihak ketiga.",
-  applicationName: "videytube",
-  keywords: ["streaming video", "pemutar video", "nonton online", "koleksi video"],
+    `Jelajahi koleksi video dewasa berdasarkan kategori dan folder. Hanya untuk pengguna berusia ${PUBLIC_MIN_AGE} tahun ke atas. ` +
+    `${PUBLIC_SITE_NAME} adalah platform penemuan; konten disajikan dari sumber pihak ketiga yang terverifikasi.`,
+  applicationName: PUBLIC_SITE_NAME,
+  keywords: ["video dewasa 18+", "katalog video", "sumber terverifikasi", "penemuan video"],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "videytube",
+    siteName: PUBLIC_SITE_NAME,
     locale: "id_ID",
     url: "/",
-    title: "videytube - Streaming video minimalis",
+    title: `${PUBLIC_SITE_NAME} — Temukan video 18+ dari sumber terverifikasi`,
     description:
-      "Jelajahi koleksi folder dan putar video langsung di browser dengan antarmuka yang ringan dan bersih.",
+      "Platform penemuan video dewasa dari sumber terverifikasi, lengkap dengan age gate 18+, moderasi aktif, dan kanal pelaporan.",
   },
   twitter: {
     card: "summary",
-    title: "videytube - Streaming video minimalis",
+    title: `${PUBLIC_SITE_NAME} — Temukan video 18+ dari sumber terverifikasi`,
     description:
-      "Jelajahi koleksi folder dan putar video langsung di browser dengan antarmuka yang ringan dan bersih.",
+      "Platform penemuan video dewasa dari sumber terverifikasi, lengkap dengan age gate 18+, moderasi aktif, dan kanal pelaporan.",
   },
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0c10",
+  themeColor: "#0a0f17",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,

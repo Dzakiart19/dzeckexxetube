@@ -1,8 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Videytube database schema.
+//
+// The platform is a discovery/aggregation layer for third-party adult (18+)
+// content. Nothing is hosted by Videytube: every Folder/Video row is a
+// moderated catalog entry that points at a verified third-party Source.
+// Moderation statuses gate everything that is publicly rendered.
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +14,180 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// A verified third-party provider that explicitly allows embedding/linking.
+model Source {
+  id           Int       @id @default(autoincrement())
+  slug         String    @unique
+  name         String
+  homepageUrl  String
+  description  String    @default("")
+  /// True only after a manual verification pass of the provider's terms.
+  verified     Boolean   @default(false)
+  verifiedAt   DateTime?
+  /// Whether the provider allows embedded playback via Videytube.
+  allowsEmbed  Boolean   @default(true)
+  /// ACTIVE | SUSPENDED
+  status       String    @default("ACTIVE")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  folders      Folder[]
+  videos       Video[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+/// Neutral, non-vulgar category labels used for discovery navigation.
+model Category {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String   @default("")
+  sortOrder   Int      @default(0)
+  folders     Folder[]
+}
+
+/// A moderated catalog folder mapped to an upstream collection.
+model Folder {
+  id          Int       @id @default(autoincrement())
+  slug        String    @unique
+  sourceId    Int
+  upstreamId  String
+  categoryId  Int?
+  name        String
+  description String    @default("")
+  videoCount  Int       @default(0)
+  /// PENDING | APPROVED | REJECTED | HIDDEN
+  status      String    @default("PENDING")
+  moderationNote String?
+  listedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  source      Source    @relation(fields: [sourceId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
+  videos      Video[]
+
+  @@unique([sourceId, upstreamId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([status, videoCount])
+}
+
+/// A moderated catalog video mapped to an upstream item. The file itself is
+/// never stored or distributed by Videytube.
+model Video {
+  id              Int       @id @default(autoincrement())
+  slug            String    @unique
+  sourceId        Int
+  folderId        Int?
+  upstreamId      String
+  title           String
+  description     String    @default("")
+  durationSeconds Int?
+  /// Allowlist-validated absolute URL; served to browsers via /api/thumb.
+  thumbnailUrl    String?
+  /// PENDING | APPROVED | REJECTED | UNDER_REVIEW | REMOVED
+  status          String    @default("PENDING")
+  moderationNote  String?
+  viewCount       Int       @default(0)
+  /// When the catalog metadata was loaded from the source.
+  dataLoadedAt    DateTime  @default(now())
+  listedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  source          Source    @relation(fields: [sourceId], references: [id])
+  folder          Folder?   @relation(fields: [folderId], references: [id])
+  reports         Report[]
+  takedowns       Takedown[]
+
+  @@unique([sourceId, upstreamId])
+  @@index([status])
+  @@index([folderId])
+  @@index([status, dataLoadedAt])
+  @@index([viewCount])
+}
+
+/// User-submitted illegal content report (the Report button).
+model Report {
+  id            Int       @id @default(autoincrement())
+  referenceCode String    @unique
+  videoId       Int?
+  videoSlug     String?
+  reportedUrl   String?
+  /// MINOR | NON_CONSENSUAL | REVENGE_PORN | DEEPFAKE | HIDDEN_CAMERA | LEAKED | COPYRIGHT | OTHER
+  category      String
+  details       String
+  reporterEmail String?
+  /// RECEIVED | REVIEWING | ACTION_TAKEN | DISMISSED
+  status        String    @default("RECEIVED")
+  handledAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  video         Video?    @relation(fields: [videoId], references: [id])
+
+  @@index([status])
+  @@index([category])
+}
+
+/// DMCA / copyright takedown request.
+model Takedown {
+  id               Int       @id @default(autoincrement())
+  referenceCode    String    @unique
+  videoId          Int?
+  complainantName  String
+  complainantEmail String
+  originalWorkUrl  String?
+  infringingUrl    String
+  goodFaith        Boolean
+  accuracy         Boolean
+  signature        String
+  /// RECEIVED | REVIEWING | CONTENT_REMOVED | REJECTED
+  status           String    @default("RECEIVED")
+  handledAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  video            Video?    @relation(fields: [videoId], references: [id])
+
+  @@index([status])
+}
+
+/// Contact form submissions.
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+}
+
+/// Audit trail for every moderation decision (auto + manual).
+model ModerationLog {
+  id         Int      @id @default(autoincrement())
+  /// SYNC_UPSERT | AUTO_APPROVE | AUTO_REJECT | HIDE_FOR_REPORT | TAKEDOWN_REMOVE | RESTORE | SOURCE_STATUS
+  action     String
+  /// VIDEO | FOLDER | SOURCE | REPORT | TAKEDOWN
+  entityType String
+  entityId   Int?
+  actor      String   @default("system-auto")
+  reason     String?
+  /// Redacted JSON detail; never contains tokens or raw playback URLs.
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+/// Anonymous, aggregate-only analytics (no PII, no raw sensitive URLs).
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  /// PAGE_VIEW | SEARCH | VIDEO_PLAY | VIDEO_ERROR | REPORT_SUBMIT | TAKEDOWN_SUBMIT
+  type      String
+  /// Route kind, e.g. "home" | "explore" | "folder" | "watch" | "search".
+  path      String?
+  /// Search keyword or filter summary only.
+  query     String?
+  videoSlug String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([createdAt])
 }

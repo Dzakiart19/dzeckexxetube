@@ -1,38 +1,48 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { AgeGateCard } from "@/components/age-gate/AgeGateCard";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
+import { Breadcrumbs } from "@/components/navigation/Breadcrumbs";
 import { SearchView } from "@/components/search/SearchView";
-import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { isAgeVerified } from "@/server/security/age-gate";
+import { listActiveCategories } from "@/server/catalog/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Pencarian",
-  description: "Cari video atau folder pada koleksi utama.",
-  robots: { index: false, follow: false },
+  description: "Cari video di katalog termoderasi berdasarkan kata kunci, kategori, durasi, dan tanggal.",
+  // Search result pages are thin/duplicated content: never indexed, never in sitemap.
+  robots: { index: false, follow: true },
 };
 
-function SearchPageFallback() {
-  return (
-    <div className="mx-auto w-full max-w-4xl" aria-hidden>
-      <div className="h-4 w-24 rounded bg-muted animate-pulse" />
-      <div className="mt-3 h-8 w-72 rounded bg-muted animate-pulse" />
-      <div className="mt-6 h-12 w-full rounded-lg bg-muted animate-pulse" />
-    </div>
-  );
+interface SearchPageProps {
+  searchParams: Promise<{ q?: string }>;
 }
 
-export default function SearchPage() {
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const { q } = await searchParams;
+  const query = (q ?? "").trim().slice(0, 100);
+  const ageVerified = await isAgeVerified();
+  const categories = await listActiveCategories();
+
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto w-full max-w-4xl">
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4" aria-hidden>
-            {Array.from({ length: 4 }).map((_item, index) => (
-              <SkeletonCard key={index} variant="video" />
-            ))}
-          </div>
-        </div>
-      }
-    >
-      <SearchView />
-    </Suspense>
+    <div className="mx-auto w-full max-w-[1200px]">
+      <PageViewTracker pathKind="search" />
+      <Breadcrumbs items={[{ label: "Pencarian" }]} />
+
+      <header className="mb-6">
+        <p className="overline-label">Katalog termoderasi</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Pencarian</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          Pencarian hanya mencakup video yang telah lolos pemeriksaan sumber dan moderasi otomatis.
+        </p>
+      </header>
+
+      {ageVerified ? (
+        <SearchView initialQuery={query} categories={categories.map((category) => ({ slug: category.slug, name: category.name }))} />
+      ) : (
+        <AgeGateCard />
+      )}
+    </div>
   );
 }

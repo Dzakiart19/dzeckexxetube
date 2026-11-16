@@ -35,6 +35,8 @@ const envSchema = z.object({
   CACHE_TTL_PLAYBACK_SECONDS: z.coerce.number().int().min(15).max(900).default(120),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(5).max(1_000).default(60),
   RATE_LIMIT_STREAM_PER_MINUTE: z.coerce.number().int().min(10).max(2_000).default(240),
+  /** Shared secret for POST /api/admin/sync; empty disables the endpoint. */
+  ADMIN_SYNC_KEY: z.string().min(16).max(128).default(""),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
@@ -64,6 +66,7 @@ export const config = {
   cacheTtlPlaybackSeconds: raw.CACHE_TTL_PLAYBACK_SECONDS,
   rateLimitPerMinute: raw.RATE_LIMIT_PER_MINUTE,
   rateLimitStreamPerMinute: raw.RATE_LIMIT_STREAM_PER_MINUTE,
+  adminSyncKey: raw.ADMIN_SYNC_KEY,
   logLevel: raw.LOG_LEVEL,
 } as const;
 

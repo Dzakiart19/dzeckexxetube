@@ -1,16 +1,11 @@
-import { FolderCard } from "@/components/folders/FolderCard";
-import type { FolderLink } from "@/lib/types";
+import { FolderCard, type FolderCardView } from "@/components/folders/FolderCard";
 
-interface FolderGridProps {
-  folders: FolderLink[];
-}
-
-/** Responsive folder grid: 2 columns on mobile, up to 4 on desktop. */
-export function FolderGrid({ folders }: FolderGridProps) {
+/** Responsive folder grid used by home, explore and category pages. */
+export function FolderGrid({ folders }: { folders: FolderCardView[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {folders.map((folder) => (
-        <FolderCard key={folder.id} folder={folder} />
+        <FolderCard key={folder.slug} folder={folder} />
       ))}
     </div>
   );

@@ -46,44 +46,48 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Dark-only visual identity: charcoal base with a single coral-magenta accent. */
+/*
+ * Visual identity: deep navy base, teal accent, soft white text.
+ * Deliberately distinct from mainstream video platforms: no bright red,
+ * no rounded-rectangle play button styling, no platform-style chrome.
+ */
 :root,
 .dark {
   --radius: 0.75rem;
-  --background: #0b0c10;
-  --foreground: #f4f5f7;
-  --card: #13151b;
-  --card-foreground: #f4f5f7;
-  --popover: #1a1d25;
-  --popover-foreground: #f4f5f7;
-  --primary: #ff5c8a;
-  --primary-foreground: #14060b;
-  --secondary: #1a1d25;
-  --secondary-foreground: #f4f5f7;
-  --muted: #171a21;
-  --muted-foreground: #9ca3af;
-  --accent: #1a1d25;
-  --accent-foreground: #f4f5f7;
+  --background: #0a0f17;
+  --foreground: #e9eef4;
+  --card: #10161f;
+  --card-foreground: #e9eef4;
+  --popover: #161d27;
+  --popover-foreground: #e9eef4;
+  --primary: #45d3c2;
+  --primary-foreground: #062620;
+  --secondary: #161d27;
+  --secondary-foreground: #e9eef4;
+  --muted: #131a24;
+  --muted-foreground: #8b96a5;
+  --accent: #17202c;
+  --accent-foreground: #e9eef4;
   --destructive: #f87171;
-  --destructive-foreground: #14060b;
+  --destructive-foreground: #2b0a0a;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.1);
-  --ring: rgba(255, 92, 138, 0.55);
-  --success: #4ade80;
-  --surface-elevated: #1a1d25;
-  --chart-1: #ff5c8a;
-  --chart-2: #4ade80;
+  --ring: rgba(69, 211, 194, 0.5);
+  --success: #34d399;
+  --surface-elevated: #161d27;
+  --chart-1: #45d3c2;
+  --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #a78bfa;
-  --chart-5: #f87171;
-  --sidebar: #13151b;
-  --sidebar-foreground: #f4f5f7;
-  --sidebar-primary: #ff5c8a;
-  --sidebar-primary-foreground: #14060b;
-  --sidebar-accent: #1a1d25;
-  --sidebar-accent-foreground: #f4f5f7;
+  --chart-5: #94a3b8;
+  --sidebar: #10161f;
+  --sidebar-foreground: #e9eef4;
+  --sidebar-primary: #45d3c2;
+  --sidebar-primary-foreground: #062620;
+  --sidebar-accent: #17202c;
+  --sidebar-accent-foreground: #e9eef4;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: rgba(255, 92, 138, 0.55);
+  --sidebar-ring: rgba(69, 211, 194, 0.5);
 }
 
 @layer base {
@@ -99,8 +103,8 @@
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: rgba(255, 92, 138, 0.35);
-    color: #f4f5f7;
+    background: rgba(69, 211, 194, 0.32);
+    color: #e9eef4;
   }
   /* Slim, unobtrusive scrollbars for dark surfaces. */
   * {
@@ -127,7 +131,7 @@
   input:focus-visible,
   video:focus-visible,
   [tabindex]:focus-visible {
-    outline: 2px solid rgba(255, 92, 138, 0.65);
+    outline: 2px solid rgba(69, 211, 194, 0.65);
     outline-offset: 2px;
   }
 }
@@ -141,5 +145,11 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--primary);
+  }
+  /* Soft radial glow behind hero sections. */
+  .hero-glow {
+    background:
+      radial-gradient(48rem 24rem at 70% -10%, rgba(69, 211, 194, 0.08), transparent 60%),
+      radial-gradient(36rem 20rem at 10% 0%, rgba(21, 59, 82, 0.55), transparent 65%);
   }
 }

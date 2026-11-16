@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/urls";
 
 /**
- * Robots policy. Content pages (folders, watch, search) are intentionally
- * excluded from indexing because the application does not own the upstream
- * content and cannot guarantee indexing permission. Only the homepage and
- * legal pages are indexable.
+ * Robots policy. Moderated content pages (folders, watch) are indexable;
+ * search result pages are thin/duplicated and stay out of the index; the
+ * report/copyright forms and the internal API are excluded as well.
  */
 export default function robots(): MetadataRoute.Robots {
   const base = siteUrl();
@@ -13,8 +12,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/terms", "/privacy", "/copyright", "/contact"],
-        disallow: ["/api/", "/watch/", "/folder/", "/search"],
+        allow: ["/", "/explore", "/category/", "/folder/", "/watch/", "/sources"],
+        disallow: ["/api/", "/search", "/report", "/copyright"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

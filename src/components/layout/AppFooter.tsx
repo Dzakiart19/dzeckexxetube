@@ -1,16 +1,30 @@
 import Link from "next/link";
-import { PUBLIC_SITE_NAME } from "@/lib/public-config";
+import { PUBLIC_SITE_NAME, PUBLIC_MIN_AGE } from "@/lib/public-config";
+import {
+  adultContentPolicyPath,
+  communityGuidelinesPath,
+  contactPath,
+  copyrightPath,
+  explorePath,
+  privacyPath,
+  reportPath,
+  sourcesPath,
+  termsPath,
+} from "@/lib/urls";
 
 const NAV_LINKS = [
-  { href: "/", label: "Beranda" },
-  { href: "/search", label: "Cari" },
+  { href: explorePath(), label: "Jelajahi" },
+  { href: sourcesPath(), label: "Sumber Terverifikasi" },
+  { href: reportPath(), label: "Laporkan Konten" },
 ];
 
 const LEGAL_LINKS = [
-  { href: "/terms", label: "Ketentuan Layanan" },
-  { href: "/privacy", label: "Kebijakan Privasi" },
-  { href: "/copyright", label: "Hak Cipta & DMCA" },
-  { href: "/contact", label: "Kontak" },
+  { href: adultContentPolicyPath(), label: "Kebijakan Konten Dewasa" },
+  { href: communityGuidelinesPath(), label: "Pedoman Komunitas" },
+  { href: termsPath(), label: "Ketentuan Layanan" },
+  { href: privacyPath(), label: "Kebijakan Privasi" },
+  { href: copyrightPath(), label: "Copyright & DMCA" },
+  { href: contactPath(), label: "Kontak" },
 ];
 
 /**
@@ -26,13 +40,17 @@ export function AppFooter() {
             <div className="flex items-center gap-2">
               <img src="/logo-mark.svg" alt="" width={32} height={32} className="size-8 shrink-0" />
               <p className="text-lg font-semibold tracking-tight">
-                vide<span className="text-[#18B8AA]">y</span>tube
+                vide<span className="text-primary">y</span>tube
               </p>
             </div>
             <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
-              Antarmuka penjelajahan dan pemutaran video yang ringan. {PUBLIC_SITE_NAME} tidak mengklaim kepemilikan
-              atas konten yang ditampilkan; seluruh konten disediakan oleh penyedia pihak ketiga dan tetap menjadi hak
-              pemilik masing-masing.
+              Platform penemuan dan katalog video dewasa ({PUBLIC_MIN_AGE}+) dari sumber pihak ketiga yang legal dan
+              terverifikasi. {PUBLIC_SITE_NAME} tidak menyimpan, mendistribusikan, atau mengklaim kepemilikan atas
+              video yang ditampilkan; seluruh konten tetap menjadi hak penyedianya.
+            </p>
+            <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+              Hanya untuk pengguna berusia {PUBLIC_MIN_AGE} tahun ke atas. Konten yang melibatkan anak di bawah umur
+              atau tidak konsensual dilarang keras dan segera dihapus.
             </p>
           </div>
 
@@ -50,7 +68,7 @@ export function AppFooter() {
           </nav>
 
           <nav aria-label="Tautan legal">
-            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">Legal</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">Kebijakan & Legal</p>
             <ul className="mt-3 space-y-2">
               {LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
@@ -64,8 +82,8 @@ export function AppFooter() {
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-border/60 pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {PUBLIC_SITE_NAME}. Antarmuka penjelajahan video independen.</p>
-          <p>Konten disajikan dari penyedia pihak ketiga. {PUBLIC_SITE_NAME} bukan pemilik konten tersebut.</p>
+          <p>© {new Date().getFullYear()} {PUBLIC_SITE_NAME}. Katalog penemuan video independen.</p>
+          <p>Video disajikan dari penyedia pihak ketiga terverifikasi. {PUBLIC_SITE_NAME} bukan pemilik konten tersebut.</p>
         </div>
       </div>
     </footer>

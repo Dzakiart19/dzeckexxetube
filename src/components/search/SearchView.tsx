@@ -1,116 +1,349 @@
 "use client";
 
-import { SearchX } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FolderGrid } from "@/components/folders/FolderGrid";
-import { VideoGrid } from "@/components/videos/VideoGrid";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { useRootFolder } from "@/hooks/use-streaming";
-import { describeApiError } from "@/lib/error-messages";
-import { searchPath } from "@/lib/urls";
+import { VideoCard, type VideoCardView } from "@/components/videos/VideoCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/api-client";
+import { thumbPath } from "@/lib/urls";
+import { cn } from "@/lib/utils";
+
+interface SearchApiResult {
+  items: {
+    slug: string;
+    title: string;
+    thumbnailUrl: string | null;
+    durationSeconds: number | null;
+    viewCount: number;
+  }[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface SearchViewProps {
+  initialQuery: string;
+  categories: { slug: string; name: string }[];
+}
+
+interface Filters {
+  category: string;
+  duration: string;
+  date: string;
+  sort: string;
+}
+
+const DURATION_OPTIONS = [
+  { value: "", label: "Semua durasi" },
+  { value: "short", label: "< 5 menit" },
+  { value: "medium", label: "5-15 menit" },
+  { value: "long", label: "15-30 menit" },
+  { value: "extra", label: "> 30 menit" },
+];
+
+const DATE_OPTIONS = [
+  { value: "", label: "Semua tanggal" },
+  { value: "day", label: "24 jam terakhir" },
+  { value: "week", label: "7 hari terakhir" },
+  { value: "month", label: "30 hari terakhir" },
+];
+
+const SORT_OPTIONS = [
+  { value: "recent", label: "Terbaru" },
+  { value: "popular", label: "Populer" },
+];
+
+const EMPTY_FILTERS: Filters = { category: "", duration: "", date: "", sort: "recent" };
 
 /**
- * Local search over the root folder data already loaded through the internal
- * API. The upstream service does not expose a search endpoint, so this page
- * is honest about its limited scope and avoids mass crawling.
+ * Interactive search over the moderated catalog: debounced query (300ms),
+ * category/duration/date/sort filters and client pagination. Result states
+ * (loading skeleton / error / empty / grid) are always explicit.
  */
-export function SearchView() {
+export function SearchView({ initialQuery, categories }: SearchViewProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("q") ?? "";
-  const [query, setQuery] = useState(initialQuery);
+  const [input, setInput] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
 
+  // Debounce the raw input into the committed query.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(query);
-      router.replace(searchPath(query), { scroll: false });
+      setDebouncedQuery(input.trim());
+      setPage(1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, router]);
+  }, [input]);
 
-  const { data, isLoading, isError, error, isRefetching, refetch } = useRootFolder(1);
+  // Keep the address bar shareable without a server navigation.
+  useEffect(() => {
+    const stable = debouncedQuery;
+    router.replace(stable ? `/search?q=${encodeURIComponent(stable)}` : "/search", { scroll: false });
+  }, [debouncedQuery, router]);
 
-  const normalized = debouncedQuery.trim().toLowerCase();
-  const hasQuery = normalized.length > 0;
-  const folders = hasQuery && data ? data.folders.filter((folder) => folder.name.toLowerCase().includes(normalized)) : [];
-  const videos = hasQuery && data ? data.videos.filter((video) => (video.title ?? "").toLowerCase().includes(normalized)) : [];
-  const totalResults = folders.length + videos.length;
+  const query = useQuery({
+    queryKey: ["search", debouncedQuery, filters, page],
+    queryFn: ({ signal }) => {
+      const params = new URLSearchParams({ q: debouncedQuery, page: String(page), sort: filters.sort });
+      if (filters.category) params.set("category", filters.category);
+      if (filters.duration) params.set("duration", filters.duration);
+      if (filters.date) params.set("date", filters.date);
+      return apiRequest<SearchApiResult>(`/api/search?${params.toString()}`, { signal });
+    },
+    enabled: debouncedQuery.length > 0,
+    staleTime: 30_000,
+    retry: false,
+    placeholderData: (previous) => previous,
+  });
+
+  const cards: VideoCardView[] = useMemo(
+    () =>
+      (query.data?.items ?? []).map((item) => ({
+        slug: item.slug,
+        title: item.title,
+        thumbSrc: thumbPath(item.thumbnailUrl),
+        durationSeconds: item.durationSeconds,
+        viewCount: item.viewCount,
+      })),
+    [query.data],
+  );
+
+  const changeFilter = (patch: Partial<Filters>) => {
+    setFilters((current) => ({ ...current, ...patch }));
+    setPage(1);
+  };
+
+  const gotoPage = (next: number) => {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const loading = query.isFetching || (debouncedQuery.length > 0 && query.isPending);
+  const failed = query.isError && debouncedQuery.length > 0;
+  const hasFilters = filters.category || filters.duration || filters.date || filters.sort !== "recent";
+  const result = query.data ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      <p className="overline-label">Pencarian</p>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">Cari video atau folder</h1>
-
+    <div>
+      {/* Query input */}
       <form
         role="search"
-        className="mt-6"
         onSubmit={(event) => {
           event.preventDefault();
-          router.replace(searchPath(query), { scroll: false });
+          setDebouncedQuery(input.trim());
+          setPage(1);
         }}
+        className="relative"
       >
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input
           type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cari judul video atau folder..."
+          name="q"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder="Cari judul video di katalog termoderasi..."
           aria-label="Kata kunci pencarian"
-          autoFocus
-          className="h-12 w-full rounded-lg border border-input bg-card/60 px-4 text-base text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-input focus:border-primary/60 focus:outline-none"
+          className="h-12 w-full rounded-lg border border-input bg-card/60 pl-10 pr-3 text-base text-foreground placeholder:text-muted-foreground/70 transition-colors hover:border-input focus:border-primary/60 focus:outline-none"
         />
       </form>
 
-      <p className="mt-3 rounded-lg border border-border bg-card/50 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-        Pencarian berjalan secara lokal pada data folder utama (halaman pertama) yang telah dimuat, sehingga hasil
-        terbatas pada koleksi utama.
+      {/* Filters */}
+      <div className="mt-4 flex flex-wrap items-center gap-2.5">
+        <label className="sr-only" htmlFor="filter-category">
+          Filter kategori
+        </label>
+        <select
+          id="filter-category"
+          value={filters.category}
+          onChange={(event) => changeFilter({ category: event.target.value })}
+          className="h-10 rounded-md border border-input bg-card px-3 text-sm text-foreground focus:border-primary/60 focus:outline-none"
+        >
+          <option value="">Semua kategori</option>
+          {categories.map((category) => (
+            <option key={category.slug} value={category.slug}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+
+        <label className="sr-only" htmlFor="filter-duration">
+          Filter durasi
+        </label>
+        <select
+          id="filter-duration"
+          value={filters.duration}
+          onChange={(event) => changeFilter({ duration: event.target.value })}
+          className="h-10 rounded-md border border-input bg-card px-3 text-sm text-foreground focus:border-primary/60 focus:outline-none"
+        >
+          {DURATION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <label className="sr-only" htmlFor="filter-date">
+          Filter tanggal
+        </label>
+        <select
+          id="filter-date"
+          value={filters.date}
+          onChange={(event) => changeFilter({ date: event.target.value })}
+          className="h-10 rounded-md border border-input bg-card px-3 text-sm text-foreground focus:border-primary/60 focus:outline-none"
+        >
+          {DATE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <label className="sr-only" htmlFor="filter-sort">
+          Urutan hasil
+        </label>
+        <select
+          id="filter-sort"
+          value={filters.sort}
+          onChange={(event) => changeFilter({ sort: event.target.value })}
+          className="h-10 rounded-md border border-input bg-card px-3 text-sm text-foreground focus:border-primary/60 focus:outline-none"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {hasFilters ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="min-h-10 px-3 text-muted-foreground hover:text-foreground"
+            onClick={() => setFilters(EMPTY_FILTERS)}
+          >
+            Reset filter
+          </Button>
+        ) : null}
+      </div>
+
+      {/* Result status line */}
+      <p className="mt-6 text-xs text-muted-foreground" aria-live="polite">
+        {loading
+          ? "Mencari di katalog termoderasi..."
+          : debouncedQuery && result
+            ? `${result.total} hasil untuk "${debouncedQuery}" · halaman ${result.page} dari ${result.totalPages}`
+            : ""}
       </p>
 
-      <div className="mt-8">
-        {!hasQuery ? (
-          <EmptyState
-            icon={SearchX}
-            title="Mulailah mengetik untuk mencari"
-            description="Hasil pencarian akan muncul di sini saat Anda mengetik kata kunci."
-          />
-        ) : isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4" aria-hidden>
-            {Array.from({ length: 4 }).map((_item, index) => (
+      {/* Results */}
+      <div className="mt-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
+            {Array.from({ length: 10 }).map((_item, index) => (
               <SkeletonCard key={index} variant="video" />
             ))}
           </div>
-        ) : isError ? (
-          <ErrorState message={describeApiError(error, "Data pencarian tidak dapat dimuat.")} onRetry={() => refetch()} retrying={isRefetching} />
-        ) : totalResults === 0 ? (
+        ) : failed ? (
           <EmptyState
-            icon={SearchX}
-            title={`Tidak ada hasil untuk "${debouncedQuery.trim()}"`}
-            description="Coba kata kunci lain, atau jelajahi folder utama untuk menemukan konten."
+            title="Pencarian gagal"
+            description="Pencarian gagal. Silakan coba lagi."
+            action={
+              <Button variant="outline" size="sm" className="min-h-11 px-5 bg-transparent" onClick={() => gotoPage(1)}>
+                Coba lagi
+              </Button>
+            }
+          />
+        ) : !debouncedQuery ? (
+          <EmptyState
+            title="Mulai mencari"
+            description="Masukkan kata kunci untuk mencari judul video yang telah lolos moderasi. Hasil yang tidak relevan tidak ditampilkan."
+          />
+        ) : cards.length === 0 ? (
+          <EmptyState
+            title="Tidak ada hasil"
+            description={
+              hasFilters
+                ? "Tidak ada video yang cocok dengan filter saat ini. Coba longgarkan filter atau ubah kata kunci."
+                : "Tidak ada video yang cocok. Konten yang belum lolos moderasi tidak pernah ditampilkan."
+            }
           />
         ) : (
-          <div className="space-y-10">
-            {folders.length > 0 && (
-              <section aria-labelledby="search-folders-heading">
-                <h2 id="search-folders-heading" className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Folder ({folders.length})
-                </h2>
-                <FolderGrid folders={folders} />
-              </section>
-            )}
-            {videos.length > 0 && (
-              <section aria-labelledby="search-videos-heading">
-                <h2 id="search-videos-heading" className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Video ({videos.length})
-                </h2>
-                <VideoGrid videos={videos} />
-              </section>
-            )}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
+              {cards.map((card) => (
+                <VideoCard key={card.slug} video={card} locked={false} />
+              ))}
+            </div>
+            {result && result.totalPages > 1 ? (
+              <SearchPagination page={result.page} totalPages={result.totalPages} onGo={gotoPage} />
+            ) : null}
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+interface SearchPaginationProps {
+  page: number;
+  totalPages: number;
+  onGo: (page: number) => void;
+}
+
+function SearchPagination({ page, totalPages, onGo }: SearchPaginationProps) {
+  const pages: number[] = [];
+  const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+  for (let value = start; value <= Math.min(totalPages, start + 4); value += 1) pages.push(value);
+
+  return (
+    <nav aria-label="Navigasi hasil pencarian" className="mt-8 flex items-center justify-center gap-1.5">
+      <button
+        type="button"
+        disabled={page <= 1}
+        onClick={() => onGo(page - 1)}
+        className={cn(
+          "flex size-10 items-center justify-center rounded-md border border-border text-sm transition-colors",
+          page <= 1 ? "text-muted-foreground/40" : "text-muted-foreground hover:border-primary/40 hover:text-foreground",
+        )}
+        aria-label="Halaman sebelumnya"
+      >
+        ‹
+      </button>
+      {pages.map((value) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => onGo(value)}
+          aria-current={value === page ? "page" : undefined}
+          aria-label={`Halaman ${value}`}
+          className={cn(
+            "flex size-10 items-center justify-center rounded-md border text-sm transition-colors",
+            value === page
+              ? "border-primary/50 bg-primary/15 font-semibold text-primary"
+              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+          )}
+        >
+          {value}
+        </button>
+      ))}
+      <button
+        type="button"
+        disabled={page >= totalPages}
+        onClick={() => onGo(page + 1)}
+        className={cn(
+          "flex size-10 items-center justify-center rounded-md border border-border text-sm transition-colors",
+          page >= totalPages ? "text-muted-foreground/40" : "text-muted-foreground hover:border-primary/40 hover:text-foreground",
+        )}
+        aria-label="Halaman berikutnya"
+      >
+        ›
+      </button>
+    </nav>
   );
 }
