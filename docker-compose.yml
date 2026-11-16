@@ -1,0 +1,76 @@
+# videytube - minimalist streaming interface.
+#
+# The application uses an in-memory cache and rate limiter by default and
+# therefore does NOT require Redis or Postgres to run. Optional services are
+# listed (commented out) at the bottom for future multi-instance scaling;
+# REDIS_URL / DATABASE_URL are not implemented in the app yet.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # Host port can be overridden with PORT, e.g. `PORT=8080 docker compose up`.
+      # The container itself always listens on 3000 (ENV PORT=3000 in the Dockerfile).
+      - "${PORT:-3000}:3000"
+    environment:
+      # The standalone server inside the container always binds to 3000.
+      PORT: 3000
+
+      # Upstream source (all upstream access happens server-side)
+      UPSTREAM_BASE_URL: https://upstream.example
+      UPSTREAM_ROOT_FOLDER_ID: your-root-folder-id
+      UPSTREAM_TIMEOUT_MS: "15000"
+      UPSTREAM_USER_AGENT: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+      UPSTREAM_REFERER: https://upstream.example/
+      VIDEO_CDN_BASE_URL: https://video-cdn.example
+      IMAGE_CDN_BASE_URL: https://image-cdn.example/image
+
+      # Server-side cache TTL (seconds)
+      CACHE_TTL_FOLDER_SECONDS: "600"
+      CACHE_TTL_VIDEO_SECONDS: "180"
+      CACHE_TTL_PLAYBACK_SECONDS: "120"
+
+      # Rate limiting (requests per minute per IP)
+      RATE_LIMIT_PER_MINUTE: "60"
+      RATE_LIMIT_STREAM_PER_MINUTE: "240"
+
+      # Logging
+      LOG_LEVEL: info
+
+      # Public configuration. NEXT_PUBLIC_* values are inlined at build time;
+      # these defaults match .env.example.
+      NEXT_PUBLIC_ROOT_FOLDER_ID: your-root-folder-id
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # OPTIONAL INFRASTRUCTURE (not required)
+  #
+  # The app currently ships with in-memory cache/rate limiting for
+  # single-instance deployments. Uncomment these only when scaling
+  # horizontally, after wiring REDIS_URL / DATABASE_URL support in the code
+  # (not implemented yet).
+  # ---------------------------------------------------------------------------
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: unless-stopped
+  #   command: ["redis-server", "--save", "", "--appendonly", "no"]
+  #   ports:
+  #     - "6379:6379"
+  #
+  # postgres:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: videytube
+  #     POSTGRES_PASSWORD: videytube
+  #     POSTGRES_DB: videytube
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:

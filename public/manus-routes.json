@@ -1,0 +1,28 @@
+{
+  "name": "videytube",
+  "description": "Minimalist full-stack video streaming interface. All upstream access is server-side (allowlisted hosts only); the browser never talks to upstream hosts directly.",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "language": "id",
+  "pages": [
+    { "route": "/", "title": "Beranda", "indexed": true },
+    { "route": "/folder/[folderId]", "title": "Jelajah folder", "indexed": false },
+    { "route": "/watch/[videoId]", "title": "Tonton video", "indexed": false },
+    { "route": "/search", "title": "Pencarian lokal", "indexed": false },
+    { "route": "/terms", "title": "Ketentuan Layanan", "indexed": true },
+    { "route": "/privacy", "title": "Kebijakan Privasi", "indexed": true },
+    { "route": "/copyright", "title": "Hak Cipta & DMCA", "indexed": true },
+    { "route": "/contact", "title": "Kontak", "indexed": true }
+  ],
+  "api": [
+    { "route": "/api/folders/root", "method": "GET", "query": ["page"], "description": "Listing folder root (cached, rate limited)" },
+    { "route": "/api/folders/[folderId]", "method": "GET", "query": ["page"], "description": "Listing folder berdasarkan id" },
+    { "route": "/api/videos/[videoId]", "method": "GET", "description": "Metadata video (tanpa token mentah)" },
+    { "route": "/api/videos/[videoId]/playback", "method": "GET", "query": ["refresh"], "description": "Status resolusi playback (ready/fallback/expired/forbidden/not-found/upstream-error)" },
+    { "route": "/api/videos/[videoId]/stream", "method": "GET", "description": "Relay server-side dengan dukungan Range; hanya host allowlist" },
+    { "route": "/api/health", "method": "GET", "description": "Status layanan dan statistik cache" }
+  ],
+  "envelope": {
+    "success": "{ \"success\": true, \"data\": ... }",
+    "failure": "{ \"success\": false, \"error\": { \"code\": \"...\", \"message\": \"...\" } }"
+  }
+}
