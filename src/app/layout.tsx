@@ -46,7 +46,10 @@ export const metadata: Metadata = {
     "koleksi video viral",
     "video dewasa terbaru",
   ],
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    types: { "application/rss+xml": "/feed.xml" },
+  },
   openGraph: {
     type: "website",
     siteName: "videytube",
@@ -55,12 +58,31 @@ export const metadata: Metadata = {
     title: "videytube - Nonton Video Viral Indo 18+ Terbaru",
     description:
       "Koleksi video viral indo 18+ terbaru, diperbarui setiap hari. Nonton langsung di browser dengan streaming cepat dan ringan.",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "videytube - Nonton Video Viral Indo 18+ Terbaru",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "videytube - Nonton Video Viral Indo 18+ Terbaru",
     description:
       "Koleksi video viral indo 18+ terbaru, diperbarui setiap hari. Nonton langsung di browser dengan streaming cepat dan ringan.",
+    images: ["/og-default.png"],
+  },
+  // Site-ownership verification meta tags for Google Search Console, Bing
+  // Webmaster Tools, and Yandex. Values are injected only when the matching
+  // environment variable is configured so nothing is hardcoded.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    yandex: process.env.YANDEX_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
   },
   robots: {
     index: true,
@@ -74,9 +96,11 @@ export const metadata: Metadata = {
     },
   },
   // Adult-content rating labels so search engines and filtering tools
-  // classify the site correctly (standard practice for 18+ tube sites).
+  // classify the site correctly. The RTA-5042 code is the industry-standard
+  // Restricted To Adults label (ASACP) used by professional adult tube
+  // sites; parental-control filters and safe-search systems read it.
   other: {
-    rating: "adult",
+    rating: "RTA-5042-1996-1400-1577-RTA",
   },
 };
 

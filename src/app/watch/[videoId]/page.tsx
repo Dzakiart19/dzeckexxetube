@@ -74,6 +74,73 @@ export async function generateMetadata({
   };
 }
 
+function iso8601Duration(seconds: number): string {
+  const safe = Math.max(1, Math.round(seconds));
+  const minutes = Math.floor(safe / 60);
+  const rest = safe % 60;
+  return `PT${minutes}M${rest}S`;
+}
+
+/**
+ * Watch-page structured data: schema.org VideoObject (required for Google
+ * video rich results; the core of xnxx/pornhub-style video SEO) plus a
+ * BreadcrumbList for crawl context. uploadDate is intentionally omitted
+ * because the upstream exposes no trustworthy publish date — fabricated
+ * dates would violate structured-data guidelines. Rendered server-side
+ * from the cached detail; no visual change to the page.
+ */
+async function WatchStructuredData({ videoId }: { videoId: string }) {
+  const base = siteUrl();
+  const watchUrl = `${base}${watchPath(videoId)}`;
+
+  let title = "Video viral 18+";
+  let description =
+    "Tonton video viral indo 18+ terbaru di videytube. Streaming cepat, ringan, dan langsung dari browser tanpa gangguan.";
+  let thumbnailUrl: string | null = null;
+  let durationSeconds: number | null = null;
+
+  try {
+    const video = await fetchVideoDetail(videoId);
+    if (video.title && video.title.trim().length > 0) title = video.title.trim();
+    description = `Tonton "${title}" - video viral indo 18+ terbaru di videytube. Streaming cepat dan ringan, langsung dari browser tanpa gangguan.`;
+    thumbnailUrl = video.thumbnailUrl ?? null;
+    durationSeconds = video.duration ?? null;
+  } catch {
+    // Keep fallback copy; structured data still renders the page entity.
+  }
+
+  const videoObject: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: title,
+    description,
+    url: watchUrl,
+    embedUrl: watchUrl,
+    isFamilyFriendly: false,
+    inLanguage: "id-ID",
+    ...(thumbnailUrl ? { thumbnailUrl: [thumbnailUrl] } : {}),
+    ...(durationSeconds && durationSeconds > 0
+      ? { duration: iso8601Duration(durationSeconds) }
+      : {}),
+  };
+
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Beranda", item: `${base}/` },
+      { "@type": "ListItem", position: 2, name: title, item: watchUrl },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObject) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
+    </>
+  );
+}
+
 function WatchPageFallback() {
   return (
     <div className="mx-auto w-full max-w-4xl" aria-hidden>
@@ -87,6 +154,7 @@ export default async function WatchPage({ params }: { params: Promise<{ videoId:
   const { videoId } = await params;
   return (
     <Suspense fallback={<WatchPageFallback />}>
+      <WatchStructuredData videoId={videoId} />
       <WatchView videoId={videoId} />
     </Suspense>
   );
