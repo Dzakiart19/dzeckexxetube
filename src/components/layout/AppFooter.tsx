@@ -30,9 +30,9 @@ export function AppFooter() {
               </p>
             </div>
             <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
-              Antarmuka penjelajahan dan pemutaran video yang ringan. {PUBLIC_SITE_NAME} tidak mengklaim kepemilikan
-              atas konten yang ditampilkan; seluruh konten disediakan oleh penyedia pihak ketiga dan tetap menjadi hak
-              pemilik masing-masing.
+              Platform penjelajahan dan pemutaran video viral indo 18+ yang ringan. {PUBLIC_SITE_NAME} tidak mengklaim
+              kepemilikan atas konten yang ditampilkan; seluruh konten disediakan oleh penyedia pihak ketiga dan tetap
+              menjadi hak pemilik masing-masing. Konten khusus untuk pengguna dewasa 18+.
             </p>
           </div>
 
@@ -64,8 +64,8 @@ export function AppFooter() {
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-border/60 pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {PUBLIC_SITE_NAME}. Antarmuka penjelajahan video independen.</p>
-          <p>Konten disajikan dari penyedia pihak ketiga. {PUBLIC_SITE_NAME} bukan pemilik konten tersebut.</p>
+          <p>© {new Date().getFullYear()} {PUBLIC_SITE_NAME}. Situs video viral 18+ untuk pengguna dewasa.</p>
+          <p>Konten dewasa 18+ disajikan dari penyedia pihak ketiga. {PUBLIC_SITE_NAME} bukan pemilik konten tersebut.</p>
         </div>
       </div>
     </footer>

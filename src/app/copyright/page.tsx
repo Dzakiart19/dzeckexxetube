@@ -4,7 +4,7 @@ import { LegalPageShell } from "@/components/layout/LegalPageShell";
 export const metadata: Metadata = {
   title: "Hak Cipta & DMCA",
   description:
-    "Pernyataan hak cipta videytube dan prosedur laporan penghapusan bergaya DMCA: unsur laporan, cara pengiriman, waktu respons, dan tindak lanjut.",
+    "Pernyataan hak cipta videytube untuk situs video 18+ dan prosedur laporan penghapusan bergaya DMCA: unsur laporan, cara pengiriman, waktu respons, dan tindak lanjut.",
   alternates: { canonical: "/copyright" },
 };
 

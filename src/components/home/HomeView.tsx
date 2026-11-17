@@ -19,7 +19,7 @@ const MAX_HOME_FOLDERS = 48;
 
 /**
  * Homepage: compact hero with search, quick folder chips, then the root
- * folder listing ("Folder terbaru") and root videos when upstream provides
+ * folder listing ("Koleksi viral terbaru") and root videos when upstream provides
  * any. Content appears within the first viewport or two.
  */
 export function HomeView() {
@@ -34,12 +34,12 @@ export function HomeView() {
   return (
     <div>
       <section className="border-b border-border/70 pb-10">
-        <p className="overline-label">Streaming Video</p>
+        <p className="overline-label">Video Viral 18+</p>
         <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-          Tonton langsung, tanpa gangguan.
+          Nonton video viral indo 18+ terbaru.
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Jelajahi koleksi folder dan video, lalu putar langsung dari browser dengan antarmuka yang ringan dan bersih.
+          Koleksi video viral dan video dewasa terbaru, diperbarui setiap hari. Putar langsung dari browser dengan streaming yang cepat, ringan, dan tanpa gangguan.
         </p>
         <div className="mt-6 max-w-xl">
           <SearchBar size="lg" />
@@ -62,7 +62,7 @@ export function HomeView() {
       <section className="mt-10" aria-labelledby="home-folders-heading">
         <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 id="home-folders-heading" className="text-lg font-semibold tracking-tight">
-            Folder terbaru
+            Koleksi viral terbaru
           </h2>
           {data && <span className="text-xs text-muted-foreground">{folders.length} folder</span>}
         </div>
@@ -104,7 +104,7 @@ export function HomeView() {
         <section className="mt-12" aria-labelledby="home-videos-heading">
           <div className="mb-4 flex items-baseline justify-between gap-4">
             <h2 id="home-videos-heading" className="text-lg font-semibold tracking-tight">
-              Video terbaru
+              Video viral terbaru
             </h2>
             <span className="text-xs text-muted-foreground">{videos.length} video</span>
           </div>

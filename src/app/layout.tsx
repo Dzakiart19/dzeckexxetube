@@ -16,33 +16,68 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * Site-wide SEO configuration. The copy targets the Indonesian 18+ viral
+ * video niche ("porn indo viral terbaru") the same way professional adult
+ * tube sites structure their metadata: keyword-rich title, descriptive
+ * meta description, complete keyword set, adult rating label, and
+ * structured data for search engines.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "videytube - Streaming video minimalis",
-    template: "%s · videytube",
+    default: "videytube - Nonton Video Viral Indo 18+ Terbaru",
+    template: "%s | videytube",
   },
   description:
-    "Antarmuka streaming video minimalis untuk menjelajahi koleksi folder dan memutar video langsung di browser. videytube tidak mengklaim kepemilikan atas konten pihak ketiga.",
+    "Nonton video viral indo 18+ terbaru gratis di videytube. Koleksi porn indo viral terlengkap dan video dewasa terbaru, diperbarui setiap hari. Streaming cepat, ringan, dan langsung dari browser tanpa gangguan.",
   applicationName: "videytube",
-  keywords: ["streaming video", "pemutar video", "nonton online", "koleksi video"],
+  keywords: [
+    "video viral indo",
+    "porn indo",
+    "porn indo viral",
+    "video viral terbaru",
+    "video 18+ terbaru",
+    "nonton video dewasa",
+    "video dewasa indo",
+    "video 18+ indo",
+    "viral indo terbaru",
+    "streaming video 18+",
+    "koleksi video viral",
+    "video dewasa terbaru",
+  ],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "videytube",
     locale: "id_ID",
     url: "/",
-    title: "videytube - Streaming video minimalis",
+    title: "videytube - Nonton Video Viral Indo 18+ Terbaru",
     description:
-      "Jelajahi koleksi folder dan putar video langsung di browser dengan antarmuka yang ringan dan bersih.",
+      "Koleksi video viral indo 18+ terbaru, diperbarui setiap hari. Nonton langsung di browser dengan streaming cepat dan ringan.",
   },
   twitter: {
     card: "summary",
-    title: "videytube - Streaming video minimalis",
+    title: "videytube - Nonton Video Viral Indo 18+ Terbaru",
     description:
-      "Jelajahi koleksi folder dan putar video langsung di browser dengan antarmuka yang ringan dan bersih.",
+      "Koleksi video viral indo 18+ terbaru, diperbarui setiap hari. Nonton langsung di browser dengan streaming cepat dan ringan.",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  // Adult-content rating labels so search engines and filtering tools
+  // classify the site correctly (standard practice for 18+ tube sites).
+  other: {
+    rating: "adult",
+  },
 };
 
 export const viewport: Viewport = {
@@ -60,6 +95,32 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+        {/* Structured data so search engines understand the site entity and
+            can surface a site search box for the brand. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "videytube",
+              alternateName: "videytube.asia",
+              url: siteUrl() + "/",
+              description:
+                "Koleksi video viral indo 18+ terbaru. Nonton video dewasa terlengkap langsung di browser, cepat dan tanpa gangguan.",
+              inLanguage: "id-ID",
+              isFamilyFriendly: false,
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: `${siteUrl()}/search?q={search_term_string}`,
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         <QueryProvider>
           <AppShell>{children}</AppShell>
         </QueryProvider>

@@ -3,9 +3,17 @@ import { HomeView } from "@/components/home/HomeView";
 
 export const metadata: Metadata = {
   // No explicit title: the root layout's `title.default`
-  // ("videytube - Streaming video minimalis") applies to the home page.
+  // ("videytube - Nonton Video Viral Indo 18+ Terbaru") applies to the home page.
   description:
-    "Jelajahi koleksi folder dan putar video langsung di browser dengan antarmuka streaming yang ringan dan bersih. videytube tidak mengklaim kepemilikan atas konten pihak ketiga.",
+    "Nonton video viral indo 18+ terbaru gratis di videytube. Koleksi porn indo viral dan video dewasa terlengkap, diperbarui setiap hari. Streaming cepat dan langsung dari browser.",
+  keywords: [
+    "video viral indo",
+    "porn indo viral",
+    "video viral terbaru",
+    "video 18+ terbaru",
+    "nonton video dewasa",
+    "viral indo terbaru",
+  ],
   alternates: { canonical: "/" },
 };
 

@@ -4,7 +4,7 @@ import { LegalPageShell } from "@/components/layout/LegalPageShell";
 export const metadata: Metadata = {
   title: "Kebijakan Privasi",
   description:
-    "Kebijakan privasi videytube: data yang diproses, data yang tidak dikumpulkan, peran penyedia sumber konten pihak ketiga, serta hak Anda sebagai pengguna.",
+    "Kebijakan privasi videytube: data yang diproses pada situs video 18+, data yang tidak dikumpulkan, peran penyedia sumber konten pihak ketiga, serta hak Anda sebagai pengguna dewasa.",
   alternates: { canonical: "/privacy" },
 };
 

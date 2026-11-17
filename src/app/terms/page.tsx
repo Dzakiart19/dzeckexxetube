@@ -4,7 +4,7 @@ import { LegalPageShell } from "@/components/layout/LegalPageShell";
 export const metadata: Metadata = {
   title: "Ketentuan Layanan",
   description:
-    "Ketentuan penggunaan videytube: deskripsi layanan, aturan penggunaan yang wajar, ketersediaan tanpa jaminan, batasan tanggung jawab, serta hukum yang berlaku.",
+    "Ketentuan penggunaan videytube untuk situs video viral 18+: deskripsi layanan konten dewasa, aturan penggunaan yang wajar, ketersediaan tanpa jaminan, batasan tanggung jawab, serta hukum yang berlaku.",
   alternates: { canonical: "/terms" },
 };
 

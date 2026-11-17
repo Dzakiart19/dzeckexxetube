@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/layout/LegalPageShell";
 import { Button } from "@/components/ui/button";
 
-const CONTACT_EMAIL = "legal@videytube.example";
+const CONTACT_EMAIL = "legal@videytube.asia";
 
 export const metadata: Metadata = {
   title: "Kontak",
   description:
-    "Cara menghubungi videytube: saran dan masukan, laporan bug, pertanyaan privasi, serta laporan hak cipta melalui email.",
+    "Cara menghubungi videytube: saran dan masukan untuk situs video viral 18+, laporan bug, pertanyaan privasi, serta laporan hak cipta melalui email.",
   alternates: { canonical: "/contact" },
 };
 

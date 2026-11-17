@@ -5,8 +5,11 @@ import { SkeletonCard } from "@/components/ui/SkeletonCard";
 
 export const metadata: Metadata = {
   title: "Pencarian",
-  description: "Cari video atau folder pada koleksi utama.",
-  robots: { index: false, follow: false },
+  description:
+    "Cari video viral indo 18+ atau koleksi video dewasa terbaru pada koleksi utama videytube.",
+  // Search result pages stay out of the index (standard tube-site practice);
+  // crawlers still follow the links found on them.
+  robots: { index: false, follow: true },
 };
 
 function SearchPageFallback() {
