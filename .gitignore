@@ -60,3 +60,4 @@ db/
 *.pid
 .zscripts/dev.pid
 download/
+tool-results/
