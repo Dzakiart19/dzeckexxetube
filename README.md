@@ -14,7 +14,7 @@ videytube adalah antarmuka streaming video minimalis berbahasa Indonesia yang me
 - Validasi input Zod di semua endpoint (id `^[A-Za-z0-9_-]{1,64}$`, halaman 1-500).
 - Redaksi data sensitif pada log: parameter `t=`, deklarasi `embedToken`, dan bearer token.
 - Pencarian lokal dengan debounce, disertai pemberitahuan jujur bahwa upstream tidak menyediakan endpoint pencarian.
-- SEO hati-hati: `robots.txt` menutup `/api/`, `/watch/`, `/folder/`, `/search`; sitemap hanya memuat beranda dan halaman legal.
+- SEO tube-site untuk niche dewasa: `robots.txt` menutup `/api/` dan `/search`, folder/watch indexable dengan metadata dinamis, JSON-LD `WebSite` + `SearchAction`, meta `rating: adult`, sitemap dinamis dari katalog upstream, dan canonical per halaman.
 - Status resolusi playback eksplisit: `ready | fallback | expired | forbidden | not-found | upstream-error`.
 
 ## Arsitektur
@@ -230,6 +230,15 @@ Kode status HTTP:
 - Tidak ada fitur unduh.
 - Pemilik situs bertanggung jawab atas halaman Terms, Privacy, dan DMCA; ganti email placeholder `legal@videytube.example` dengan kontak asli sebelum dipublikasikan.
 - videytube tidak memiliki, menyimpan, atau mendistribusikan konten apa pun.
+
+## Deployment (Vercel)
+
+Project terhubung ke Vercel melalui GitHub (auto-deploy):
+
+- Repo: `Dzakiart19/dzeckexxetube` (branch `main` = production).
+- Setiap push ke `main` otomatis memicu build dan deploy produksi ke `https://videytube.vercel.app`.
+- `vercel.json` mengunci perintah build (`next build`) dan install (`bun install`).
+- Environment variables produksi diatur di dashboard Vercel (project **videytube**, scope production).
 
 ## Docker
 
