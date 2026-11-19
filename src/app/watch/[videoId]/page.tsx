@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { WatchView } from "@/components/videos/WatchView";
 import { SkeletonPlayer } from "@/components/ui/SkeletonCard";
-import { fetchVideoDetail } from "@/server/upstream/upstream-client";
+import { fetchVideoDetail } from "@/server/providers/streamrizz/upstream-client";
 import { siteUrl, videoStreamPath, watchPath } from "@/lib/urls";
 
 /**

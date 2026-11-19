@@ -1,4 +1,4 @@
-import { fetchLatestCatalogVideos } from "@/server/upstream/catalog";
+import { fetchLatestCatalogVideos } from "@/server/providers/streamrizz/catalog";
 import { siteUrl, watchPath } from "@/lib/urls";
 
 /**

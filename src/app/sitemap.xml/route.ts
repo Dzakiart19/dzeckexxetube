@@ -1,7 +1,8 @@
-import { fetchFolder } from "@/server/upstream/upstream-client";
-import { fetchLatestCatalogVideos } from "@/server/upstream/catalog";
+import { fetchFolder } from "@/server/providers/streamrizz/upstream-client";
+import { fetchLatestCatalogVideos } from "@/server/providers/streamrizz/catalog";
+import { getProvider } from "@/server/providers/registry";
 import { PUBLIC_ROOT_FOLDER_ID } from "@/lib/public-config";
-import { folderPath, siteUrl, watchPath } from "@/lib/urls";
+import { folderPath, siteUrl, videyWatchPath, watchPath } from "@/lib/urls";
 
 /**
  * Dynamic sitemap with the Google Video Sitemap extension, following the
@@ -74,12 +75,17 @@ function videoUrlEntry(
   return parts.join("");
 }
 
+/** Platform 2 catalog helper (bounded to the first two listing pages). */
+function getProviderCatalog() {
+  return getProvider("videy").getCatalogVideos(40, 4);
+}
+
 export async function GET(): Promise<Response> {
   const base = siteUrl();
   const now = new Date().toISOString();
-
   const entries: string[] = [
     urlEntry(`${base}/`, "daily", 1, now),
+    urlEntry(`${base}/v2`, "daily", 0.9, now),
     urlEntry(`${base}/terms`, "yearly", 0.2, now),
     urlEntry(`${base}/privacy`, "yearly", 0.2, now),
     urlEntry(`${base}/copyright`, "yearly", 0.2, now),
@@ -99,12 +105,25 @@ export async function GET(): Promise<Response> {
     videos = await fetchLatestCatalogVideos(8, 4);
   }
 
+  // Platform 2 (videy): newest listing pages flattened into video entries.
+  let videyVideos: Awaited<ReturnType<typeof getProviderCatalog>> = [];
+  try {
+    videyVideos = await getProviderCatalog();
+  } catch {
+    // Platform 2 unreachable: platform 1 output stays intact.
+  }
+
   for (const folder of folders) {
     entries.push(urlEntry(`${base}${folderPath(folder.id)}`, "daily", 0.8, now));
   }
   for (const video of videos) {
     entries.push(
       videoUrlEntry(`${base}${watchPath(video.id)}`, video.title, video.thumbnailUrl, now),
+    );
+  }
+  for (const video of videyVideos) {
+    entries.push(
+      videoUrlEntry(`${base}${videyWatchPath(video.id)}`, video.title, video.thumbnailUrl, now),
     );
   }
 

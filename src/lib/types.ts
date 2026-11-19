@@ -15,6 +15,10 @@ export interface VideoSummary {
   title: string | null;
   url: string;
   thumbnailUrl?: string | null;
+  /** Duration in seconds when the platform exposes it (listing/watch). */
+  duration?: number | null;
+  /** View count when the platform exposes it. */
+  views?: number | null;
 }
 
 export interface FolderResponse {
@@ -38,6 +42,8 @@ export interface VideoDetail {
   playbackSource: PlaybackSourceKind;
   duration: number | null;
   expiresAt: string | null;
+  /** View count when the platform exposes it. */
+  views?: number | null;
   upstreamMetadata: {
     rf?: string;
     im?: string;

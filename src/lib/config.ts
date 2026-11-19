@@ -30,6 +30,24 @@ const envSchema = z.object({
     .string()
     .regex(/^[A-Za-z0-9_-]{1,64}$/)
     .default("video-bucket"),
+  /** Second platform (videy): base URL, headers, and allowlist patterns. */
+  VIDEY_BASE_URL: z.url().default("https://videy.design"),
+  VIDEY_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(60_000).default(15_000),
+  VIDEY_USER_AGENT: z
+    .string()
+    .min(8)
+    .default(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    ),
+  VIDEY_REFERER: z.url().default("https://videy.design/"),
+  /** Comma-separated regex patterns for hosts allowed to serve videy video bytes. */
+  VIDEY_HOST_PATTERNS: z
+    .string()
+    .min(1)
+    .default("^videy\\.design$,^videydesign\\.site$,^([a-z0-9-]+\\.)?volleybox\\.net$"),
+  VIDEY_LIST_TTL_SECONDS: z.coerce.number().int().min(30).max(86_400).default(300),
+  VIDEY_VIDEO_TTL_SECONDS: z.coerce.number().int().min(30).max(3_600).default(600),
+  VIDEY_PLAYBACK_TTL_SECONDS: z.coerce.number().int().min(15).max(900).default(300),
   CACHE_TTL_FOLDER_SECONDS: z.coerce.number().int().min(30).max(86_400).default(600),
   CACHE_TTL_VIDEO_SECONDS: z.coerce.number().int().min(30).max(3_600).default(180),
   CACHE_TTL_PLAYBACK_SECONDS: z.coerce.number().int().min(15).max(900).default(120),
@@ -59,6 +77,14 @@ export const config = {
   imageCdnBaseUrl: raw.IMAGE_CDN_BASE_URL,
   playbackHostPatterns: raw.PLAYBACK_HOST_PATTERNS,
   upstreamFallbackBucket: raw.UPSTREAM_FALLBACK_BUCKET,
+  videyBaseUrl: raw.VIDEY_BASE_URL,
+  videyTimeoutMs: raw.VIDEY_TIMEOUT_MS,
+  videyUserAgent: raw.VIDEY_USER_AGENT,
+  videyReferer: raw.VIDEY_REFERER,
+  videyHostPatterns: raw.VIDEY_HOST_PATTERNS,
+  videyListTtlSeconds: raw.VIDEY_LIST_TTL_SECONDS,
+  videyVideoTtlSeconds: raw.VIDEY_VIDEO_TTL_SECONDS,
+  videyPlaybackTtlSeconds: raw.VIDEY_PLAYBACK_TTL_SECONDS,
   cacheTtlFolderSeconds: raw.CACHE_TTL_FOLDER_SECONDS,
   cacheTtlVideoSeconds: raw.CACHE_TTL_VIDEO_SECONDS,
   cacheTtlPlaybackSeconds: raw.CACHE_TTL_PLAYBACK_SECONDS,

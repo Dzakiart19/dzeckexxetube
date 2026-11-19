@@ -2,7 +2,7 @@ import { config } from "@/lib/config";
 import { ValidationError } from "@/lib/errors";
 import { errorResponse, getClientIp, ok, parsePageParam, rateLimitedResponse } from "@/lib/http";
 import { checkRateLimit } from "@/server/security/rate-limit";
-import { fetchFolder } from "@/server/upstream/upstream-client";
+import { fetchFolder } from "@/server/providers/streamrizz/upstream-client";
 
 export const dynamic = "force-dynamic";
 

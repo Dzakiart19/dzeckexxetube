@@ -2,7 +2,7 @@ import { ValidationError } from "@/lib/errors";
 import { errorResponse, fail, getClientIp, ok, rateLimitedResponse } from "@/lib/http";
 import { config } from "@/lib/config";
 import { checkRateLimit } from "@/server/security/rate-limit";
-import { fetchPlayback } from "@/server/upstream/upstream-resolver";
+import { fetchPlayback } from "@/server/providers/streamrizz/upstream-resolver";
 import { safeIdSchema } from "@/server/validation/schemas";
 
 export const dynamic = "force-dynamic";

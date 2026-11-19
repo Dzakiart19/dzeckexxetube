@@ -1,6 +1,8 @@
 import { ok } from "@/lib/http";
-import { getUpstreamCacheStats } from "@/server/upstream/upstream-client";
-import { getPlaybackCacheStats } from "@/server/upstream/upstream-resolver";
+import { getUpstreamCacheStats } from "@/server/providers/streamrizz/upstream-client";
+import { getPlaybackCacheStats } from "@/server/providers/streamrizz/upstream-resolver";
+import { getVideyCacheStats } from "@/server/providers/videy/client";
+import { getVideyPlaybackCacheStats } from "@/server/providers/videy/resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +14,13 @@ export async function GET() {
       service: "videytube",
       uptimeSeconds: Math.round(process.uptime()),
       caches: {
+        // Platform 1 (streamrizz)
         ...getUpstreamCacheStats(),
         playback: getPlaybackCacheStats(),
+        // Platform 2 (videy)
+        videyList: getVideyCacheStats().list,
+        videyVideos: getVideyCacheStats().videos,
+        videyPlayback: getVideyPlaybackCacheStats(),
       },
       timestamp: new Date().toISOString(),
     },

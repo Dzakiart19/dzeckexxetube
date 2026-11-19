@@ -49,6 +49,8 @@ const PLAYBACK_HOST_PATTERNS: RegExp[] = [
   ...parseHostPatterns(config.playbackHostPatterns),
 ];
 
+const VIDEY_HOST_PATTERNS: RegExp[] = parseHostPatterns(config.videyHostPatterns);
+
 const THUMBNAIL_HOST = imageCdnHost;
 
 /**
@@ -66,10 +68,11 @@ export interface PlaybackUrlValidation {
 }
 
 /**
- * Validate a playback URL returned by upstream parsers.
- * Returns the normalized URL string when the host is allowed, otherwise null.
+ * Shared URL shape validation: https only, no credentials, no non-standard
+ * ports, safe path/query character sets. Host matching is delegated to the
+ * supplied pattern set so each platform keeps its own allowlist.
  */
-export function validatePlaybackUrl(raw: string): PlaybackUrlValidation {
+function validateUrlShape(raw: string, patterns: RegExp[]): PlaybackUrlValidation {
   let parsed: URL;
   try {
     parsed = new URL(raw);
@@ -87,13 +90,26 @@ export function validatePlaybackUrl(raw: string): PlaybackUrlValidation {
   if (parsed.port) {
     return { ok: false, url: null, reason: "unsafe-url" };
   }
-  if (!PLAYBACK_HOST_PATTERNS.some((pattern) => pattern.test(parsed.hostname))) {
+  if (!patterns.some((pattern) => pattern.test(parsed.hostname))) {
     return { ok: false, url: null, reason: "host-not-allowed" };
   }
   if (!PATH_SAFE_PATTERN.test(parsed.pathname) || (parsed.search && !QUERY_SAFE_PATTERN.test(parsed.search))) {
     return { ok: false, url: null, reason: "unsafe-url" };
   }
   return { ok: true, url: parsed.toString(), reason: null };
+}
+
+/**
+ * Validate a playback URL returned by upstream parsers.
+ * Returns the normalized URL string when the host is allowed, otherwise null.
+ */
+export function validatePlaybackUrl(raw: string): PlaybackUrlValidation {
+  return validateUrlShape(raw, PLAYBACK_HOST_PATTERNS);
+}
+
+/** Validate a videy platform playback URL against the videy host allowlist. */
+export function validateVideyPlaybackUrl(raw: string): PlaybackUrlValidation {
+  return validateUrlShape(raw, VIDEY_HOST_PATTERNS);
 }
 
 /** Thumbnail URLs are served directly by the configured image CDN host. */

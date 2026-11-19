@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { FolderView } from "@/components/folders/FolderView";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { fetchFolder } from "@/server/upstream/upstream-client";
+import { fetchFolder } from "@/server/providers/streamrizz/upstream-client";
 import { folderPath, parsePageNumber, siteUrl } from "@/lib/urls";
 
 /**

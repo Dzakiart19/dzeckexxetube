@@ -34,6 +34,32 @@ export function videoStreamPath(videoId: string): string {
   return `/api/videos/${encodeURIComponent(videoId)}/stream`;
 }
 
+/* ------------------------------------------------------------------ */
+/* videy (platform 2) route helpers                                    */
+/* ------------------------------------------------------------------ */
+
+export type VideySort = "terbaru" | "trending" | "lama";
+
+export const VIDEY_SORTS: VideySort[] = ["terbaru", "trending", "lama"];
+
+export function videyHomePath(sort?: VideySort | null, page?: number): string {
+  const params = new URLSearchParams();
+  if (sort && sort !== "terbaru") params.set("sort", sort);
+  if (page && page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `/v2?${query}` : "/v2";
+}
+
+export function videyWatchPath(videoId: string, sort?: VideySort | null): string {
+  const base = `/v2/watch/${encodeURIComponent(videoId)}`;
+  return sort && sort !== "terbaru" ? `${base}?sort=${sort}` : base;
+}
+
+/** Relay endpoint for videy videos (Range-capable, allowlisted hosts only). */
+export function videyVideoStreamPath(videoId: string): string {
+  return `/api/videy/videos/${encodeURIComponent(videoId)}/stream`;
+}
+
 /** Clamp a raw page query value into a safe positive integer (default 1). */
 export function parsePageNumber(raw: string | null | undefined): number {
   if (!raw) return 1;

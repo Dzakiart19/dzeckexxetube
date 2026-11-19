@@ -1,12 +1,8 @@
-import { fetchFolder } from "@/server/upstream/upstream-client";
+import { fetchFolder } from "@/server/providers/streamrizz/upstream-client";
 import { PUBLIC_ROOT_FOLDER_ID } from "@/lib/public-config";
+import type { CatalogVideo } from "@/server/providers/types";
 
-/** Flattened video entry used by SEO surfaces (sitemap, feed, JSON-LD). */
-export interface CatalogVideo {
-  id: string;
-  title: string;
-  thumbnailUrl: string | null;
-}
+export type { CatalogVideo };
 
 /**
  * The upstream root folder lists sub-folders (actual videos live one level
@@ -38,7 +34,7 @@ export async function fetchLatestCatalogVideos(
         for (const video of outcome.value.videos) {
           results.push({
             id: video.id,
-            title: video.title,
+            title: video.title ?? video.id,
             thumbnailUrl: video.thumbnailUrl ?? null,
           });
         }

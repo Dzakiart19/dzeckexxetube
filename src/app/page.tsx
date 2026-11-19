@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { HomeView } from "@/components/home/HomeView";
-import { fetchFolder } from "@/server/upstream/upstream-client";
+import { fetchFolder } from "@/server/providers/streamrizz/upstream-client";
 import { PUBLIC_ROOT_FOLDER_ID } from "@/lib/public-config";
 import { folderPath, siteUrl, watchPath } from "@/lib/urls";
 
@@ -36,7 +36,7 @@ async function HomeItemListJsonLd() {
     if (root.videos.length > 0) {
       items = root.videos.slice(0, 30).map((video) => ({
         url: `${base}${watchPath(video.id)}`,
-        name: video.title,
+        name: video.title ?? video.id,
       }));
     } else {
       items = root.folders.slice(0, 30).map((folder) => ({

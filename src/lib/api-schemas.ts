@@ -37,6 +37,7 @@ export const videoDetailSchema = z.object({
   playbackSource: z.enum(["direct-cdn", "fallback-stream", "none"]),
   duration: z.number().nullable(),
   expiresAt: z.string().nullable(),
+  views: z.number().nullable().optional(),
   upstreamMetadata: z.object({
     rf: z.string().optional(),
     im: z.string().optional(),
@@ -52,5 +53,39 @@ export const playbackResultSchema = z.object({
   playbackSource: z.enum(["direct-cdn", "fallback-stream", "none"]),
   posterUrl: z.string().nullable(),
   expiresAt: z.string().nullable(),
+  fetchedAt: z.string(),
+});
+
+/* videy (platform 2) response schemas. */
+
+export const videyListResponseSchema = z.object({
+  page: z.number(),
+  sort: z.enum(["terbaru", "trending", "lama"]),
+  videos: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string().nullable(),
+      url: z.string(),
+      thumbnailUrl: z.string().nullable().optional(),
+      duration: z.number().nullable().optional(),
+      views: z.number().nullable().optional(),
+    }),
+  ),
+  hasNextPage: z.boolean().nullable(),
+  totalPages: z.number().nullable(),
+  source: z.literal("upstream"),
+  fetchedAt: z.string(),
+});
+
+export const videyVideoDetailSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  thumbnailUrl: z.string().nullable(),
+  playbackUrl: z.string().nullable(),
+  playbackSource: z.enum(["direct-cdn", "fallback-stream", "none"]),
+  duration: z.number().nullable(),
+  expiresAt: z.string().nullable(),
+  views: z.number().nullable().optional(),
+  upstreamMetadata: z.object({}),
   fetchedAt: z.string(),
 });
