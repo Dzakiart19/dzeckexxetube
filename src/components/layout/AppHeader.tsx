@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Beranda" },
-  { href: "/v2", label: "videytube 2", accent: true },
+  { href: "/v2", label: "videytube 2" },
   { href: rootFolderPath(), label: "Jelajahi" },
   { href: "/search", label: "Cari" },
 ];
@@ -52,12 +52,8 @@ export function AppHeader() {
                 className={cn(
                   "shrink-0 rounded-md px-2.5 py-2 text-sm font-medium transition-colors sm:px-3",
                   active
-                    ? item.accent
-                      ? "bg-primary/15 text-primary"
-                      : "text-foreground"
-                    : item.accent
-                      ? "text-primary/80 hover:text-primary"
-                      : "text-muted-foreground hover:text-foreground",
+                    ? "bg-primary/15 text-primary"
+                    : "text-foreground/80 hover:text-foreground",
                 )}
               >
                 {item.label}
